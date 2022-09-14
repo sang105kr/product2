@@ -108,6 +108,7 @@ public class ProductController {
                        RedirectAttributes redirectAttributes) {
 
     if (bindingResult.hasErrors()) {
+      log.info("bindingResult={}", bindingResult);
       return "product/updateForm";
     }
 

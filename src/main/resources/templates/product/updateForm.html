@@ -28,7 +28,7 @@
         <p class="fieldError" th:each="err:${#fields.globalErrors()}" th:text="${err}"></p>
       </div>
       <div><label th:for="productId">아이디</label></div>
-      <div><input type="text" th:field="*{productId}" disabled></div>
+      <div><input type="text" th:field="*{productId}" readonly></div>
       <div><label th:for="pname">상품명</label></div>
       <div>
         <input type="text" th:field="*{pname}">
