@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Title</title>
+  <style>
+    a {
+      text-decoration:none;
+    }
+    table {
+      border:1px solid;
+      border-collapse: collapse;
+    }
+    td,th {
+      border:1px solid;
+      padding:5px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="product-wrap">
+  <h3>상품목록</h3>
+  <div class="product-body">
+    <table>
+      <thead>
+      <tr>
+        <th>상품ID</th><th>상품명</th><th>단가</th><th>수량</th>
+      </tr>
+      </thead>
+      <tbody th:obejct="${form}">
+      <tr th:each="product:${list}">
+        <td th:text="${product.productId}">상품ID</td>
+        <td >
+          <a href="" th:href="@{/products/{id}/detail(id=${product.productId})}" th:text="${product.pname}">상품명</a>
+        </td>
+        <td th:text="${product.price}">가격</td>
+        <td th:text="${product.quantity}">수량</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="product-btngrp">
+    <button type="button" id="writeBtn">등록</button>
+  </div>
+  <script>
+    const $writeBtn = document.getElementById('writeBtn');
+    $writeBtn?.addEventListener('click',evt=>{
+      location.href = '/products/add';
+    });
+  </script>
+</body>
+</html>

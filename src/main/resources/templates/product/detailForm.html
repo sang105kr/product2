@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>상품상세</title>
+  <style>
+    .product-wrap .product-body{
+      display:grid;
+      grid-template-column: 100px 300px;
+    }
+
+  </style>
+</head>
+
+<body>
+<div class="product-wrap">
+  <h3>상품상세</h3>
+  <div class="product-body">
+    <form id="detailForm" action="" th:action th:object="${form}">
+      <div><label for="">아이디</label></div>
+      <div><input type="text" th:field="*{productId}" readonly="readonly"></div>
+      <div><label for="">상품명</label></div>
+      <div><input type="text" th:field="*{pname}" readonly="readonly"></div>
+      <div><label for="">수량</label></div>
+      <div><input type="text" th:field="*{quantity}" readonly="readonly"></div>
+      <div><label for="">가격</label></div>
+      <div><input type="text" th:field="*{price}" readonly="readonly"></div>
+    </form>
+  </div>
+  <div class="product-btngrp">
+    <button type="button" id="updateBtn">수정</button>
+    <button type="button" id="deleteBtn">삭제</button>
+    <button type="button" id="listBtn">목록</button>
+  </div>
+</div>
+<script>
+    //수정
+    const $updateBtn = document.getElementById('updateBtn');
+    $updateBtn.addEventListener('click', evt=>{
+      const productId = document.getElementById('detailForm').productId.value;
+      const url = `/products/${productId}/edit`;
+      location.href = url;
+    });
+    //삭제
+    const $deleteBtn = document.getElementById('deleteBtn');
+    $deleteBtn.addEventListener('click', evt=>{
+      if(confirm('삭제하시겠습니까?')){
+        const productId = document.getElementById('detailForm').productId.value;
+        const url = `/products/${productId}/del`;
+        location.href = url;
+      }
+    });
+    //목록
+     const $listBtn = document.getElementById('listBtn');
+     $listBtn.addEventListener('click', evt=>{
+      location.href = '/products';
+     });
+  </script>
+</body>
+</html>

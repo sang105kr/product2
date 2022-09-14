@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>등록양식</title>
+  <style>
+    .product-wrap .product-body{
+      display:grid;
+      grid-template-column: 100px 300px;
+    }
+    .fieldError {
+      color:red;
+      font-size:0.8em;
+      font-width:bold;
+    }
+  </style>
+</head>
+
+<body>
+<div class="product-wrap">
+  <h3>상품등록</h3>
+  <div class="product-body">
+    <form id="saveForm" action="" th:action th:method="post" th:object="${form}">
+      <div th:if="${#fields.hasGlobalErrors()}">
+        <p class="fieldError" th:each="err:${#fields.globalErrors()}" th:text="${err}"></p>
+      </div>
+      <div><label th:for="pname">상품명</label></div>
+      <div>
+        <input type="text" th:field="*{pname}">
+        <div class="fieldError" th:errors="*{pname}"></div>
+      </div>
+      <div><label th:for="quantity">수량</label></div>
+      <div>
+        <input type="text" th:field="*{quantity}">
+        <div class="fieldError" th:errors="*{quantity}"></div>
+      </div>
+      <div><label th:for="price">단가</label></div>
+      <div>
+        <input type="text" th:field="*{price}">
+        <div class="fieldError" th:errors="*{price}"></div>
+      </div>
+    </form>
+  </div>
+  <div class="product-btngrp">
+    <button type="button" id="saveBtn">등록</button>
+  </div>
+</div>
+<script>
+    const $saveBtn = document.getElementById('saveBtn');
+    $saveBtn.addEventListener('click', evt=>{
+      document.getElementById('saveForm').submit();
+    });
+  </script>
+</body>
+</html>
