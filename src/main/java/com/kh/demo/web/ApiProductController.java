@@ -3,15 +3,15 @@ package com.kh.demo.web;
 import com.kh.demo.dao.Product;
 import com.kh.demo.svc.ProductSVC;
 import com.kh.demo.web.api.ApiResponse;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import com.kh.demo.web.api.product.AddReq;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j  // log.info()
 @Controller
@@ -24,34 +24,43 @@ public class ApiProductController {
 //  등록	POST	/api/products
   @ResponseBody
   @PostMapping(value = "/products")
-  public ApiResponse<List<Person>> add(@RequestBody String reqMsg){
-    log.info("reqMsg={}",reqMsg);
+  public ApiResponse<Long> add(@RequestBody AddReq addReq){
+    log.info("reqMsg={}",addReq);
+    //검증
 
-   List<Person> persons = new ArrayList<>();
+    //AddReq->Product 변환
+    Product product = new Product();
+    BeanUtils.copyProperties(addReq, product );
 
-    Person p1 = new Person("홍길동", 30);
-    Person p2 = new Person("홍길순", 20);
+    //상품등록
+    Long id = productSVC.save(product);
 
-    persons.add(p1);    persons.add(p2);
-
+    //응답메세지
     ApiResponse.Header header = new ApiResponse.Header("00", "성공");
-    ApiResponse<List<Person>> response = new ApiResponse<>(header,persons);
+    ApiResponse<Long> response = new ApiResponse<>(header,id);
 
     return response;
   }
 
-  @Data
-  @AllArgsConstructor
-  static class Person{
-    private String name;
-    private int age;
-  }
-
-
 //  조회	GET	/api/products/{id}
+  @ResponseBody
   @GetMapping("/products/{id}")
-  public String findById(){
-    return "ok";
+  public  ApiResponse<Product> findById(@PathVariable("id") Long id){
+
+    //상품조회
+    Optional<Product> findedProduct = productSVC.findByProductId(id);
+
+    //응답메세지
+    ApiResponse<Product> response = null;
+    if(findedProduct.isPresent()){
+      Product product = findedProduct.get();
+      ApiResponse.Header header = new ApiResponse.Header("00", "성공");
+      response = new ApiResponse<>(header,product);
+    }else{
+      ApiResponse.Header header = new ApiResponse.Header("01", "찾고자하는 정보가 없습니다.");
+      response = new ApiResponse<>(header,null);
+    }
+    return response;
   }
 //  수정	PATCH	/api/products/{id}
   @PatchMapping("/products/{id}")
