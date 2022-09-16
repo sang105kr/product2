@@ -29,7 +29,21 @@ public class ApiProductControllerV3 {
     log.info("reqMsg={}",addReq);
     //검증
     if(bindingResult.hasErrors()){
-      log.info("bindingResult={}",bindingResult);
+      log.info("bindingResult1={}",bindingResult);
+      return ApiResponse.createApiResMsg("99", "실패", getErrMsg(bindingResult));
+    }
+
+    //비즈니스 규칙
+    //필드검증
+    if(addReq.getQuantity() > 100){
+      bindingResult.rejectValue("quantity",null,"상품수량은 100개를 초과할 수 없습니다.");
+    }
+    //오브젝트검증
+    if(addReq.getQuantity() * addReq.getPrice() > 10_000_000){
+      bindingResult.reject(null, "총액(상품수량*단가)이 1000만원을 초과할수 없습니다.");
+    }
+    if(bindingResult.hasErrors()){
+      log.info("bindingResult1={}",bindingResult);
       return ApiResponse.createApiResMsg("99", "실패", getErrMsg(bindingResult));
     }
 
@@ -41,7 +55,7 @@ public class ApiProductControllerV3 {
     Long id = productSVC.save(product);
 
     //응답메세지
-    return ApiResponse.createApiResMsg("00", "성공", bindingResult);
+    return ApiResponse.createApiResMsg("00", "성공", id);
   }
 
   //검증 오류 메세지
@@ -50,8 +64,8 @@ public class ApiProductControllerV3 {
 
     bindingResult.getAllErrors().stream().forEach(objectError -> {
       errmsg.put(objectError.getCodes()[0],objectError.getDefaultMessage());
-
     });
+
     return errmsg;
   }
 
@@ -73,9 +87,31 @@ public class ApiProductControllerV3 {
   }
 //  수정	PATCH	/api/products/{id}
   @PatchMapping("/products/{id}")
-  public ApiResponse<Product> edit(@PathVariable("id") Long id, @RequestBody EditReq editReq){
+  public ApiResponse<Object> edit(
+      @PathVariable("id") Long id,
+      @Valid @RequestBody EditReq editReq,
+      BindingResult bindingResult){
 
     //검증
+    if(bindingResult.hasErrors()){
+      log.info("bindingResult1={}",bindingResult);
+      return ApiResponse.createApiResMsg("99", "실패", getErrMsg(bindingResult));
+    }
+
+    //비즈니스 규칙
+    //필드검증
+    if(editReq.getQuantity() > 100){
+      bindingResult.rejectValue("quantity",null,"상품수량은 100개를 초과할 수 없습니다.");
+    }
+    //오브젝트검증
+    if(editReq.getQuantity() * editReq.getPrice() > 10_000_000){
+      bindingResult.reject(null, "총액(상품수량*단가)이 1000만원을 초과할수 없습니다.");
+    }
+    if(bindingResult.hasErrors()){
+      log.info("bindingResult1={}",bindingResult);
+      return ApiResponse.createApiResMsg("99", "실패", getErrMsg(bindingResult));
+    }
+
     Optional<Product> findedProduct = productSVC.findByProductId(id);
     if(findedProduct.isEmpty()){
       return ApiResponse.createApiResMsg("01", "수정 하고자 상품이 없습니다.", null);
