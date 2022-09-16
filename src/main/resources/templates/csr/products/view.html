@@ -6,15 +6,35 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>상품관리-CSR</title>
+  <style>
+    .fieldError {
+      color:red;
+      font-weight:bold;
+      font-size:0.8em;
+    }
+  </style>
 </head>
 <body>
   <h3>상품관리-CSR</h3>
   <hr>
   <div>
     <form action="">
-      <div><label for="">상품명</label><input type="text" id="pname"></div>
-      <div><label for="">수량</label><input type="text" id="quantity"></div>
-      <div><label for="">단가</label><input type="text" id="price"></div>
+      <div><span class="fieldError" id="globalErr"></span></div>
+      <div>
+        <label for="pname">상품명</label>
+        <input type="text" id="pname">
+        <span class="fieldError" id="pnameErr"></span>
+      </div>
+      <div>
+        <label for="quantity">수량</label>
+        <input type="text" id="quantity">
+        <span class="fieldError" id="quantityErr"></span>
+      </div>
+      <div>
+        <label for="price">단가</label>
+        <input type="text" id="price">
+        <span class="fieldError" id="priceErr"></span>
+      </div>
       <div><button type='button' id="addBtn">등록</button></div>
     </form>
   </div>
@@ -33,6 +53,89 @@
     //등록 클릭시
     addBtn.addEventListener('click',e=>{
       //데이터 검증(유효성 체크)
+      //상품명 필수
+      if(!pname.value.trim()){
+        pnameErr.textContent = '필수 필드입니다.';
+        if(!pnameErr.classList.contains('fieldError')){
+          pnameErr.classList.add('fieldError');
+        }
+        return;
+      }else{
+        pnameErr.textContent = '';
+        pnameErr.classList.remove('fieldError');
+      }
+
+      //수량 필수
+      if(!quantity.value.trim()){
+        quantityErr.textContent = '필수 필드입니다.'
+        if(!quantityErr.classList.contains('fieldError')){
+          quantityErr.classList.add('fieldError');
+        }
+        return;
+      }else{
+        quantityErr.textContent = '';
+        quantityErr.classList.remove('fieldError');
+      }
+
+      //수량은 양의 숫자
+      if(isNaN(quantity.value) || quantity.value < 0){
+        quantityErr.textContent = '양수값 이어야합니다.';
+        if(!quantityErr.classList.contains('fieldError')){
+          quantityErr.classList.add('fieldError');
+        }
+        return;
+      }else{
+        quantityErr.textContent = '';
+        quantityErr.classList.remove('fieldError');
+      }
+
+      //수량은 100초과할수 없음
+      if(quantity.value > 100) {
+        quantityErr.textContent = '수량은 100개를 초과할 수 없습니다.';
+        if(!quantityErr.classList.contains('fieldError')){
+          quantityErr.classList.add('fieldError');
+        }
+        return;
+      }else{
+        quantityErr.textContent = '';
+        quantityErr.classList.remove('fieldError');
+      }
+
+      //단가 필수
+      if(!price.value.trim()){
+        priceErr.textContent = '필수 필드입니다.'
+        if(!priceErr.classList.contains('fieldError')){
+          priceErr.classList.add('fieldError');
+        }
+        return;
+      }else{
+        priceErr.textContent = ''
+        priceErr.classList.remove('fieldError');
+      }
+
+      //단가 양의 숫자
+      if(isNaN(price.value) || price.value < 0){
+        priceErr.textContent = '양수값 이어야합니다.';
+        if(!priceErr.classList.contains('fieldError')){
+          priceErr.classList.add('fieldError');
+        }
+        return;
+      }else{
+        priceErr.textContent = '';
+        priceErr.classList.remove('fieldError');
+      }
+
+      //총액(상품수량*단가)이 1000만원을 초과할수 없음
+      if(quantity.value * price.value > 10000000){
+        globalErr.textContent = '총액(상품수량*단가)이 1000만원을 초과할수 없습니다';
+        if(!globalErr.classList.contains('fieldError')){
+          globalErr.classList.add('fieldError');
+        }
+        return;
+      }else{
+        globalErr.textContent = '';
+        globalErr.classList.remove('fieldError');
+      }
 
       //등록 요청
       const product = {
@@ -41,8 +144,14 @@
         'price':price.value
       };
       add(product);
+
+      //필드 clear
+      pname.value = '';
+      quantity.value = '';
+      price.value = '';
     });
 
+    //등록
     function add(product){
       const url = 'http://localhost:9080/api/products';
       fetch( url,{            //url
