@@ -36,6 +36,7 @@
         <label for="productId">상품아이디</label>
         <input type="text" id="productId" size="10">
         <button type="button" id="findBtn">조회</button>
+        <span class="fieldError" id="productIdErr"></span>
       </div>
       <div>
         <label for="pname">상품명</label>
@@ -73,14 +74,23 @@
     </div>
   </div>
   <script>
+
+    //전역변수
+    const form = {
+      productId:document.getElementById('productId'),
+      pname:document.getElementById('pname'),
+      quantity:document.getElementById('quantity'),
+      price:document.getElementById('price')
+    }
+
     //전체목록 가져오기
     findAll();
 
     //입력데이터 가져오기
     function getInputData(){
-      const pname = document.getElementById('pname').value;
-      const quantity = document.getElementById('quantity').value;
-      const price = document.getElementById('price').value;
+      const pname = form.pname.value;
+      const quantity = form.quantiy.value;
+      const price = form.price.value;
 
       //변수이름을 property key, 변수값을 property value
       return { pname, quantity, price };
@@ -138,9 +148,17 @@
         .then(res=>{
           console.log(res);
           if(res.header.rtcd == '00'){
-
+            //조회결과 양식에 반영하기
+            fillForm(res.data);
+            productIdErr.textContent = '';
           }else{
-            new Error(res.header.rtcd + res.header.rtmsg);
+            const errMsg = `${res.header.rtcd}-${res.header.rtmsg}`;
+            productIdErr.textContent = res.header.rtmsg;
+
+            if(!globalErr.classList.contains('fieldError')){
+              productIdErr.classList.add('fieldError');
+            }
+            throw new Error(errMsg);
           }
          })
         .catch(err=>console.log(err));
@@ -295,9 +313,17 @@
 
     //필드 clear
     function clearForm(){
-      pname.value = '';
-      quantity.value = '';
-      price.value = '';
+      form.pname.value = '';
+      form.quantity.value = '';
+      form.price.value = '';
+    }
+
+    //양식 값 채우기
+    function fillForm({productId,pname,quantity,price}){
+      form.productId.value = productId;
+      form.pname.value = pname;
+      form.quantity.value = quantity;
+      form.price.value = price;
     }
   </script>
 </body>
