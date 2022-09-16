@@ -7,16 +7,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>상품관리-CSR</title>
   <style>
+    * { outline:1px solid red }
     .fieldError {
       color:red;
       font-weight:bold;
       font-size:0.8em;
+    }
+    #productList .wrap .head,
+    #productList .wrap .body{
+      display:grid;
+      grid-template-columns: 50px 100px 50px 50px;
+      grid-auto-rows: 2em;
+    }
+    #productList .wrap .head{
+      font-weight:bold;
+      font-size:1.2em;
     }
   </style>
 </head>
 <body>
   <h3>상품관리-CSR</h3>
   <hr>
+  <!--상품등록-->
   <div>
     <form action="">
       <div><span class="fieldError" id="globalErr"></span></div>
@@ -35,11 +47,26 @@
         <input type="text" id="price">
         <span class="fieldError" id="priceErr"></span>
       </div>
-      <div><button type='button' id="addBtn">등록</button></div>
+      <div>
+        <button type='button' id="addBtn">등록</button>
+      </div>
     </form>
   </div>
-
-
+  <!--상품목록-->
+  <div id="productList">
+    <h3>상품목록</h3>
+    <div><button id="listBtn">목록</button></div>
+    <div class="wrap">
+      <div class="head">
+        <div>ID</div><div>상품명</div><div>수량</div><div>가격</div>
+      </div>
+      <div class="body">
+        <div>1</div><div>상품명1</div><div>10</div><div>1000</div>
+        <div>2</div><div>상품명2</div><div>20</div><div>2000</div>
+        <div>3</div><div>상품명3</div><div>30</div><div>3000</div>
+      </div>
+    </div>
+  </div>
   <script>
     //상품등록
     //fetch(resource)
@@ -151,6 +178,12 @@
       price.value = '';
     });
 
+    //목록 클릭시
+    listBtn.addEventListener('click',e=>{
+      findAll();
+    });
+
+
     //등록
     function add(product){
       const url = 'http://localhost:9080/api/products';
@@ -216,7 +249,22 @@
           'Accept':'application/json'
         }
       }).then(res=>res.json())
-        .then(data=>console.log(data))
+        .then(res=>{
+          console.log(res);
+          if(res.header.rtcd == '00'){
+            const result =
+              res.data.map(product=>{
+                  return `<div>${product.productId}</div>
+                          <div>${product.pname}</div>
+                          <div>${product.quantity}</div>
+                          <div>${product.price}</div>`;
+               });
+            console.log(result.join());
+            document.querySelector('#productList .wrap .body').innerHTML=result.join('');
+          }else{
+
+          }
+        })
         .catch(err=>console.log(err));
     }
 
