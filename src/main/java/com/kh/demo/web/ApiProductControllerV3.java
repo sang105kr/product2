@@ -125,7 +125,7 @@ public class ApiProductControllerV3 {
     productSVC.update(id, product);
 
     //응답메세지
-    return ApiResponse.createApiResMsg("01", "수정 하고자 상품이 없습니다.", productSVC.findByProductId(id).get());
+    return ApiResponse.createApiResMsg("01", "성공", productSVC.findByProductId(id).get());
   }
 //  삭제	DELETE	/api/products/{id}
   @DeleteMapping("/products/{id}")

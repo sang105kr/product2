@@ -9,22 +9,108 @@
 </head>
 <body>
   <h3>상품관리-CSR</h3>
+  <hr>
+  <div>
+    <form action="">
+      <div><label for="">상품명</label><input type="text" id="pname"></div>
+      <div><label for="">수량</label><input type="text" id="quantity"></div>
+      <div><label for="">단가</label><input type="text" id="price"></div>
+      <div><button type='button' id="addBtn">등록</button></div>
+    </form>
+  </div>
+
+
   <script>
     //상품등록
     //fetch(resource)
     //fetch(resource, options)
+    const product = {
+      pname:'컴퓨터',
+      quantity:10,
+      price:500000
+    };
 
-    const url = 'http://localhost:9080/api/products';
-    fetch( url,{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'Accept':'application/json'
-      },
-      body: `{"pname":"컴퓨터","quantity":"10","price":"300000"}`
-    }).then(res=>res.json())
-      .then(data=>console.log(data))
-      .catch(err=>console.log(err));
+    //등록 클릭시
+    addBtn.addEventListener('click',e=>{
+      //데이터 검증(유효성 체크)
+
+      //등록 요청
+      const product = {
+        'pname':pname.value,
+        'quantity':quantity.value,
+        'price':price.value
+      };
+      add(product);
+    });
+
+    function add(product){
+      const url = 'http://localhost:9080/api/products';
+      fetch( url,{            //url
+        method:'POST',        //http method
+        headers:{             //http header
+          'Content-Type':'application/json',
+          'Accept':'application/json'
+        },
+        body: JSON.stringify(product)   //http body      // js객체 => json포맷의 문자열
+      }).then(res=>res.json())
+        .then(data=>console.log(data))
+        .catch(err=>console.log(err));
+    }
+    //조회
+    function findById(id){
+      const url = `http://localhost:9080/api/products/${id}`;
+      fetch( url,{            //url
+        method:'GET',        //http method
+        headers:{             //http header
+          'Accept':'application/json'
+        },
+      }).then(res=>res.json())
+        .then(data=>console.log(data))
+        .catch(err=>console.log(err));
+    }
+
+    //수정
+    function update(id,product){
+      const url = `http://localhost:9080/api/products/${id}`;
+      fetch( url,{            //url
+        method:'PATCH',        //http method
+        headers:{             //http header
+          'Content-Type':'application/json',
+          'Accept':'application/json'
+        },
+        body: JSON.stringify(product)  //http body
+
+      }).then(res=>res.json())
+        .then(data=>console.log(data))
+        .catch(err=>console.log(err));
+    }
+
+    //삭제
+    function deleteById(id){
+      const url = `http://localhost:9080/api/products/${id}`;
+      fetch( url,{            //url
+        method:'DELETE',        //http method
+        headers:{             //http header
+          'Accept':'application/json'
+        },
+      }).then(res=>res.json())
+        .then(data=>console.log(data))
+        .catch(err=>console.log(err));
+    }
+
+    //목록
+    function findAll(){
+      const url = `http://localhost:9080/api/products`;
+      fetch( url,{            //url
+        method:'GET',        //http method
+        headers:{             //http header
+          'Accept':'application/json'
+        }
+      }).then(res=>res.json())
+        .then(data=>console.log(data))
+        .catch(err=>console.log(err));
+    }
+
   </script>
 </body>
 </html>
