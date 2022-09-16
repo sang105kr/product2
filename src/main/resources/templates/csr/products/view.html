@@ -16,7 +16,7 @@
     #productList .wrap .head,
     #productList .wrap .body{
       display:grid;
-      grid-template-columns: 50px 100px 50px 50px;
+      grid-template-columns: 50px 100px 50px 100px;
       grid-auto-rows: 2em;
     }
     #productList .wrap .head{
@@ -32,6 +32,11 @@
   <div>
     <form action="">
       <div><span class="fieldError" id="globalErr"></span></div>
+      <div>
+        <label for="productId">상품아이디</label>
+        <input type="text" id="productId" size="10">
+        <button type="button" id="findBtn">조회</button>
+      </div>
       <div>
         <label for="pname">상품명</label>
         <input type="text" id="pname">
@@ -68,18 +73,139 @@
     </div>
   </div>
   <script>
-    //상품등록
-    //fetch(resource)
-    //fetch(resource, options)
-    const product = {
-      pname:'컴퓨터',
-      quantity:10,
-      price:500000
-    };
+    //전체목록 가져오기
+    findAll();
+
+    //입력데이터 가져오기
+    function getInputData(){
+      const pname = document.getElementById('pname').value;
+      const quantity = document.getElementById('quantity').value;
+      const price = document.getElementById('price').value;
+
+      //변수이름을 property key, 변수값을 property value
+      return { pname, quantity, price };
+    }
 
     //등록 클릭시
     addBtn.addEventListener('click',e=>{
-      //데이터 검증(유효성 체크)
+      //1)데이터 검증(유효성 체크)
+      if(!validChk()) return;
+      //2)입력데이터 가져오기
+      const product = getInputData();
+      //3)상품등록처리
+      add(product);
+      //4)목록가져오기
+      findAll();
+      //5)양식 클리어
+      clearForm();
+    });
+
+    //조회 클릭시
+    findBtn.addEventListener('click', e=>{
+       const id = productId.value; //상품아이디
+       findById(id);
+    });
+
+    //목록 클릭시
+    listBtn.addEventListener('click',e=>{
+      findAll();
+    });
+
+
+    //등록
+    function add(product){
+      const url = 'http://localhost:9080/api/products';
+      fetch( url,{            //url
+        method:'POST',        //http method
+        headers:{             //http header
+          'Content-Type':'application/json',
+          'Accept':'application/json'
+        },
+        body: JSON.stringify(product)   //http body      // js객체 => json포맷의 문자열
+      }).then(res=>res.json())
+        .then(data=>console.log(data))
+        .catch(err=>console.log(err));
+    }
+    //조회
+    function findById(id){
+      const url = `http://localhost:9080/api/products/${id}`;
+      fetch( url,{            //url
+        method:'GET',        //http method
+        headers:{             //http header
+          'Accept':'application/json'
+        },
+      }).then(res=>res.json())
+        .then(res=>{
+          console.log(res);
+          if(res.header.rtcd == '00'){
+
+          }else{
+            new Error(res.header.rtcd + res.header.rtmsg);
+          }
+         })
+        .catch(err=>console.log(err));
+    }
+
+    //수정
+    function update(id,product){
+      const url = `http://localhost:9080/api/products/${id}`;
+      fetch( url,{            //url
+        method:'PATCH',        //http method
+        headers:{             //http header
+          'Content-Type':'application/json',
+          'Accept':'application/json'
+        },
+        body: JSON.stringify(product)  //http body
+
+      }).then(res=>res.json())
+        .then(data=>console.log(data))
+        .catch(err=>console.log(err));
+    }
+
+    //삭제
+    function deleteById(id){
+      const url = `http://localhost:9080/api/products/${id}`;
+      fetch( url,{            //url
+        method:'DELETE',        //http method
+        headers:{             //http header
+          'Accept':'application/json'
+        },
+      }).then(res=>res.json())
+        .then(data=>console.log(data))
+        .catch(err=>console.log(err));
+    }
+
+    //목록
+    function findAll(){
+      const url = `http://localhost:9080/api/products`;
+      fetch( url,{            //url
+        method:'GET',        //http method
+        headers:{             //http header
+          'Accept':'application/json'
+        }
+      }).then(res=>res.json())
+        .then(res=>{
+          console.log(res);
+          if(res.header.rtcd == '00'){
+            const result =
+              res.data.map(product=>{
+                  return `<div>${product.productId}</div>
+                          <div>${product.pname}</div>
+                          <div>${product.quantity}</div>
+                          <div>${product.price}</div>`;
+               });
+            console.log(result.join());
+            document.querySelector('#productList .wrap .body').innerHTML=result.join('');
+          }else{
+
+          }
+        })
+        .catch(err=>console.log(err));
+    }
+
+
+    function validChk(){
+
       //상품명 필수
       if(!pname.value.trim()){
         pnameErr.textContent = '필수 필드입니다.';
@@ -164,110 +290,15 @@
         globalErr.classList.remove('fieldError');
       }
 
-      //등록 요청
-      const product = {
-        'pname':pname.value,
-        'quantity':quantity.value,
-        'price':price.value
-      };
-      add(product);
+      return true;
+    }
 
-      //필드 clear
+    //필드 clear
+    function clearForm(){
       pname.value = '';
       quantity.value = '';
       price.value = '';
-    });
-
-    //목록 클릭시
-    listBtn.addEventListener('click',e=>{
-      findAll();
-    });
-
-
-    //등록
-    function add(product){
-      const url = 'http://localhost:9080/api/products';
-      fetch( url,{            //url
-        method:'POST',        //http method
-        headers:{             //http header
-          'Content-Type':'application/json',
-          'Accept':'application/json'
-        },
-        body: JSON.stringify(product)   //http body      // js객체 => json포맷의 문자열
-      }).then(res=>res.json())
-        .then(data=>console.log(data))
-        .catch(err=>console.log(err));
     }
-    //조회
-    function findById(id){
-      const url = `http://localhost:9080/api/products/${id}`;
-      fetch( url,{            //url
-        method:'GET',        //http method
-        headers:{             //http header
-          'Accept':'application/json'
-        },
-      }).then(res=>res.json())
-        .then(data=>console.log(data))
-        .catch(err=>console.log(err));
-    }
-
-    //수정
-    function update(id,product){
-      const url = `http://localhost:9080/api/products/${id}`;
-      fetch( url,{            //url
-        method:'PATCH',        //http method
-        headers:{             //http header
-          'Content-Type':'application/json',
-          'Accept':'application/json'
-        },
-        body: JSON.stringify(product)  //http body
-
-      }).then(res=>res.json())
-        .then(data=>console.log(data))
-        .catch(err=>console.log(err));
-    }
-
-    //삭제
-    function deleteById(id){
-      const url = `http://localhost:9080/api/products/${id}`;
-      fetch( url,{            //url
-        method:'DELETE',        //http method
-        headers:{             //http header
-          'Accept':'application/json'
-        },
-      }).then(res=>res.json())
-        .then(data=>console.log(data))
-        .catch(err=>console.log(err));
-    }
-
-    //목록
-    function findAll(){
-      const url = `http://localhost:9080/api/products`;
-      fetch( url,{            //url
-        method:'GET',        //http method
-        headers:{             //http header
-          'Accept':'application/json'
-        }
-      }).then(res=>res.json())
-        .then(res=>{
-          console.log(res);
-          if(res.header.rtcd == '00'){
-            const result =
-              res.data.map(product=>{
-                  return `<div>${product.productId}</div>
-                          <div>${product.pname}</div>
-                          <div>${product.quantity}</div>
-                          <div>${product.price}</div>`;
-               });
-            console.log(result.join());
-            document.querySelector('#productList .wrap .body').innerHTML=result.join('');
-          }else{
-
-          }
-        })
-        .catch(err=>console.log(err));
-    }
-
   </script>
 </body>
 </html>
