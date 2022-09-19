@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>상품관리-CSR</title>
   <style>
-    * { outline:1px solid red }
+    /* { outline:1px solid red }*/
     .fieldError {
       color:red;
       font-weight:bold;
@@ -19,9 +19,20 @@
       grid-template-columns: 50px 100px 50px 100px;
       grid-auto-rows: 2em;
     }
+
     #productList .wrap .head{
       font-weight:bold;
       font-size:1.2em;
+    }
+
+    #productList .wrap .head div,
+    #productList .wrap .body div {
+     border:1px solid gray;
+    }
+
+    /* 버튼 */
+    .none {
+      display:none;
     }
   </style>
 </head>
@@ -53,8 +64,14 @@
         <input type="text" id="price">
         <span class="fieldError" id="priceErr"></span>
       </div>
-      <div>
+      <!--등록상태-->
+      <div class="btngrp add">
         <button type='button' id="addBtn">등록</button>
+      </div>
+      <!--조회상태-->
+      <div class="btngrp read">
+        <button type='button' id="toAddBtn">신규</button>
+        <button type='button' id="modifyBtn">수정</button>
         <button type='button' id="delBtn">삭제</button>
       </div>
     </form>
@@ -76,16 +93,45 @@
   </div>
   <script>
 
+    //불변객체 : 프로퍼티값 수정 불가.
+    const MODE = Object.freeze({
+      ADD: Symbol('add'),             //등록
+      READ: Symbol('read')            //조회
+    });
+
     //전역변수
     const form = {
       productId:document.getElementById('productId'),
       pname:document.getElementById('pname'),
       quantity:document.getElementById('quantity'),
-      price:document.getElementById('price')
+      price:document.getElementById('price'),
+      mode: null
     }
+
+    //등록상태
+    changeMode(MODE.ADD);
 
     //전체목록 가져오기
     findAll();
+
+    //화면Mode 변경
+    function changeMode(mode){
+      //현재 mode와 비교시 동일하면 수행안함.
+      if(form.mode == mode) return;
+      form.mode = mode;
+      switch(form.mode){
+        case MODE.ADD : //등록
+          //버튼
+          document.querySelector('.btngrp.add').style.display = 'block';
+          document.querySelector('.btngrp.read').style.display = 'none';
+          break;
+        case MODE.READ ://조회
+          //버튼
+          document.querySelector('.btngrp.add').style.display = 'none';
+          document.querySelector('.btngrp.read').style.display = 'block';
+          break;
+      }
+    }
 
     //입력데이터 가져오기
     function getInputData(){
@@ -105,8 +151,7 @@
       const product = getInputData();
       //3)상품등록처리
       add(product);
-      //4)목록가져오기
-      findAll();
+
       //5)양식 클리어
       clearForm();
     });
@@ -121,13 +166,38 @@
 
     //조회 클릭시
     findBtn.addEventListener('click', e=>{
+      if(!productId.value.trim()){
+        productIdErr.textContent = '상품아이디를 입력하세요';
+        form.productId.focus();
+        if(!productIdErr.classList.contains('fieldError')){
+          productIdErr.classList.add('fieldError');
+        }
+        return;
+      }else{
+        productIdErr.textContent = ''
+        productIdErr.classList.remove('fieldError');
+      }
        const id = form.productId.value; //상품아이디
        findById(id);
+    });
+
+    //수정 클릭시
+    modifyBtn.addEventListener('click',e=>{
+      //1)유효성 체크
+      validChk()
+      //2)수정처리
+      update(form.productId.value, getInputData());
     });
 
     //목록 클릭시
     listBtn.addEventListener('click',e=>{
       findAll();
+    });
+
+    //신규 클릭시
+    toAddBtn.addEventListener('click',e=>{
+      changeMode(MODE.ADD);
+      clearForm();
     });
 
     //등록
@@ -141,7 +211,10 @@
         },
         body: JSON.stringify(product)   //http body      // js객체 => json포맷의 문자열
       }).then(res=>res.json())
-        .then(data=>console.log(data))
+        .then(data=>{
+          console.log(data)
+          findAll();
+         })
         .catch(err=>console.log(err));
     }
     //조회
@@ -159,6 +232,8 @@
             //조회결과 양식에 반영하기
             fillForm(res.data);
             productIdErr.textContent = '';
+            //조회 상태
+            changeMode(MODE.READ);
           }else{
             const errMsg = `${res.header.rtcd}-${res.header.rtmsg}`;
             productIdErr.textContent = res.header.rtmsg;
@@ -184,7 +259,10 @@
         body: JSON.stringify(product)  //http body
 
       }).then(res=>res.json())
-        .then(data=>console.log(data))
+        .then(data=>{
+          console.log(data);
+          findAll();
+        })
         .catch(err=>console.log(err));
     }
 
