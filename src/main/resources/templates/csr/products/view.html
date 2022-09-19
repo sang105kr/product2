@@ -55,6 +55,7 @@
       </div>
       <div>
         <button type='button' id="addBtn">등록</button>
+        <button type='button' id="delBtn">삭제</button>
       </div>
     </form>
   </div>
@@ -89,7 +90,7 @@
     //입력데이터 가져오기
     function getInputData(){
       const pname = form.pname.value;
-      const quantity = form.quantiy.value;
+      const quantity = form.quantity.value;
       const price = form.price.value;
 
       //변수이름을 property key, 변수값을 property value
@@ -110,9 +111,17 @@
       clearForm();
     });
 
+    //삭제 클릭
+    delBtn.addEventListener('click',e=>{
+      if(!confirm('삭제하시겠습니까?')) return;
+      const id = form.productId.value; //상품아이디
+      deleteById(id);
+      clearForm();
+    });
+
     //조회 클릭시
     findBtn.addEventListener('click', e=>{
-       const id = productId.value; //상품아이디
+       const id = form.productId.value; //상품아이디
        findById(id);
     });
 
@@ -120,7 +129,6 @@
     listBtn.addEventListener('click',e=>{
       findAll();
     });
-
 
     //등록
     function add(product){
@@ -189,7 +197,10 @@
           'Accept':'application/json'
         },
       }).then(res=>res.json())
-        .then(data=>console.log(data))
+        .then(data=>{
+          console.log(data);
+          findAll();
+        })
         .catch(err=>console.log(err));
     }
 
@@ -208,11 +219,11 @@
             const result =
               res.data.map(product=>{
                   return `<div>${product.productId}</div>
-                          <div>${product.pname}</div>
+                          <div><a href='#' onclick='findById(${product.productId})'>${product.pname}</a></div>
                           <div>${product.quantity}</div>
                           <div>${product.price}</div>`;
                });
-            console.log(result.join());
+            console.log(result.join(''));
             document.querySelector('#productList .wrap .body').innerHTML=result.join('');
           }else{
 
@@ -313,6 +324,7 @@
 
     //필드 clear
     function clearForm(){
+      form.productId.value = '';
       form.pname.value = '';
       form.quantity.value = '';
       form.price.value = '';
