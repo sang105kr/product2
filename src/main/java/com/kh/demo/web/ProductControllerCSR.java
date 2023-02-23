@@ -14,4 +14,8 @@ public class ProductControllerCSR {
   public String view(){
     return "csr/products/view";
   }
+  @GetMapping("/productsV2")
+  public String viewV2(){
+    return "csr/products/view2";
+  }
 }

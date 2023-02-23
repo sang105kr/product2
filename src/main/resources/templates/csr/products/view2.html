@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>상품관리-CSR</title>
+  <style>
+    /* { outline:1px solid red }*/
+    .fieldError {
+      color:red;
+      font-weight:bold;
+      font-size:0.8em;
+    }
+    #productList .wrap .head,
+    #productList .wrap .body{
+      display:grid;
+      grid-template-columns: 50px 100px 50px 100px;
+      grid-auto-rows: 2em;
+    }
+
+    #productList .wrap .head{
+      font-weight:bold;
+      font-size:1.2em;
+    }
+
+    #productList .wrap .head div,
+    #productList .wrap .body div {
+     border:1px solid gray;
+    }
+
+    /* 버튼 */
+    .none {
+      display:none;
+    }
+  </style>
+</head>
+<body>
+  <h3>상품관리-CSR</h3>
+  <hr>
+  <!--상품등록-->
+  <div>
+    <form action="">
+      <div><span class="fieldError" id="globalErr"></span></div>
+      <div>
+        <label for="productId">상품아이디</label>
+        <input type="text" id="productId" size="10">
+        <button type="button" id="findBtn">조회</button>
+        <span class="fieldError" id="productIdErr"></span>
+      </div>
+      <div>
+        <label for="pname">상품명</label>
+        <input type="text" id="pname">
+        <span class="fieldError" id="pnameErr"></span>
+      </div>
+      <div>
+        <label for="quantity">수량</label>
+        <input type="text" id="quantity">
+        <span class="fieldError" id="quantityErr"></span>
+      </div>
+      <div>
+        <label for="price">단가</label>
+        <input type="text" id="price">
+        <span class="fieldError" id="priceErr"></span>
+      </div>
+      <!--등록상태-->
+      <div class="btngrp add">
+        <button type='button' id="addBtn">등록</button>
+      </div>
+      <!--조회상태-->
+      <div class="btngrp read">
+        <button type='button' id="toAddBtn">신규</button>
+        <button type='button' id="modifyBtn">수정</button>
+        <button type='button' id="delBtn">삭제</button>
+      </div>
+    </form>
+  </div>
+  <!--상품목록-->
+  <div id="productList">
+    <h3>상품목록</h3>
+    <div><button id="listBtn">목록</button></div>
+    <div class="wrap">
+      <div class="head">
+        <div>ID</div><div>상품명</div><div>수량</div><div>가격</div>
+      </div>
+      <div class="body">
+        <div>1</div><div>상품명1</div><div>10</div><div>1000</div>
+        <div>2</div><div>상품명2</div><div>20</div><div>2000</div>
+        <div>3</div><div>상품명3</div><div>30</div><div>3000</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    //--to do list
+
+    //상품목록
+    const url = `http://localhost:9080/api/products`;
+    fetch(url,{
+      method : 'GET'
+    })
+    .then(res=>res.json())
+    .then(res=>{console.log(res)});
+  </script>
+</body>
+</html>
