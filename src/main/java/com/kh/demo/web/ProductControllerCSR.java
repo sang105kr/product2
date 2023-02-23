@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Slf4j
 @Controller
-@RequestMapping("/csr/products")
+@RequestMapping("/csr")
 public class ProductControllerCSR {
 
-  @GetMapping
+  @GetMapping("/products")
   public String view(){
     return "csr/products/view";
   }
