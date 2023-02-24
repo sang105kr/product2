@@ -102,13 +102,54 @@
     //
     const $productId = document.getElementById('productId');
 
+    //상품등록 리스너 등록
+    const $addBtn = document.getElementById('addBtn');
+    $addBtn.addEventListener('click',e=>{
+      const pname = document.getElementById('pname').value;
+      const quantity = document.getElementById('quantity').value;
+      const price = document.getElementById('price').value;
+
+      //유효성체크
+
+
+      const product = {pname,quantity,price};
+      addProduct(product);
+    });
+
+    //상품신규 리스너 등록
+    const $toAddBtn = document.getElementById('toAddBtn');
+    $toAddBtn.addEventListener('click',e=>{
+       document.querySelector('form').reset();
+       doDisplay(document.querySelector('.btngrp.add'));
+       doHidden(document.querySelector('.btngrp.read'));
+    });
+
     //상품조회 리스너 등록
     const $findBtn = document.getElementById('findBtn');
     $findBtn.addEventListener('click', e=>findById($productId.value));
 
+    //상품수정 리스너 등록
+    const $modifyBtn = document.getElementById('modifyBtn');
+    $modifyBtn.addEventListener('click', e=>{
+      const pname = document.getElementById('pname').value;
+      const quantity = document.getElementById('quantity').value;
+      const price = document.getElementById('price').value;
+
+      //유효성체크
+
+
+      const product = {pname,quantity,price};
+      updateItem($productId.value,product);
+    });
+
+
     //상품삭제 리스너 등록
     const $delBtn = document.getElementById('delBtn');
-    $delBtn.addEventListener('click', e=>delItem($productId.value));
+    $delBtn.addEventListener('click', e=>{
+      if(confirm('삭제하시겠습니까?')) {
+        delItem($productId.value);
+      }
+    });
 
     //전체목록 리스너 등록
     const $listBtn = document.getElementById('listBtn');
@@ -120,7 +161,6 @@
        ele.classList.add('hidden');
       }
     }
-
     // element 표시
     function doDisplay(ele){
       if(ele.classList.contains('hidden')){
@@ -140,6 +180,39 @@
       document.getElementById('globalErr').textContent = '';
     }
 
+    // 상품등록 양식 클리어
+    function clearForm(){
+      document.getElementById('pname').value = '';
+      document.getElementById('quantity').value = '';
+      document.getElementById('price').value = '';
+    }
+
+    //상품등록
+    function addProduct(product){  // { pname:'', quantyty:'',price:''}
+      const url = `http://localhost:9080/api/products`;
+      fetch(url,{
+        method: 'POST',
+        headers: {
+          'Accept' :        'application/json',   // client에서 응답받고자하는 문서유형을 서버에 요청
+          'Content-type' :  'application/json'    // client에서 요청메세지바디의 문서유형
+        },
+        body: JSON.stringify(product)   // `{ "pname":"", "quantyty":"",price:""}`
+      })
+      .then(res=>res.json())
+      .then(res=>{
+        if(res.header.rtcd == '00'){
+          clearForm();
+          listAll();
+          successMsg(`상품아이디 : ${res.data} 로  등록하였습니다. `);
+        }else{
+          throw new Error(`${res.header.rtmsg}`);
+        }
+      })
+      .catch(err=>{
+        fail(`${err.message}`);
+      });
+    }
+
     //상품조회
     function findById(pid){
       const url = `http://localhost:9080/api/products/${pid}`;
@@ -154,8 +227,7 @@
          document.getElementById('price').value = price;
       }
       fetch(url,{
-        method : 'GET',
-        'Accept' : 'application/json'   // client에서 서버로부터 응답메시지를 받고자하는 유형
+        method : 'GET'
       })
         .then(res=>res.json())
         .then(res=>{
@@ -167,21 +239,55 @@
           }})
         .catch(err=>{
           failMsg(err.message);
+          clearForm();
         });
+    }
+
+    //상품수정
+    function updateItem(pid, product){
+      const url = `http://localhost:9080/api/products/${pid}`;
+      fetch(url,{
+        method : 'PATCH',
+        headers: {
+          'Accept' :        'application/json',   // client에서 응답받고자하는 문서유형을 서버에 요청
+          'Content-type' :  'application/json'    // client에서 요청메세지바디의 문서유형
+        },
+        body: JSON.stringify(product)   // `{ "pname":"", "quantyty":"",price:""}`
+      })
+      .then(res=>res.json())
+      .then(res=>{
+          if(res.header.rtcd == '01'){
+            successMsg(`상품아이디 ${pid}에 대해 수정하였습니다.`);
+            listAll();
+          }else{
+            throw new Error(`${res.header.rtcd}-${res.header.rtmsg}`);
+          }
+       })
+      .catch(err=>{
+         failMsg(`상품수정오류발생: ${err.message}`)
+      });
+
     }
 
     //상품삭제
     function delItem(pid){
       const url = `http://localhost:9080/api/products/${pid}`;
       fetch(url,{
-        method: 'DELETE',
-        Accept: 'application/json'
+        method: 'DELETE'
       })
       .then(res=>res.json())
-      .then(res=>res.header.rtcd == '00' ?
-        document.getElementById('globalSucess').textContent = `상품아이디 ${pid}가 삭제처리되었습니다.`
-        : new Error(`${res.header.rtmsg}`))
-      .catch(err=>console.error(err.message));
+      .then(res=>{
+        if(res.header.rtcd == '00') {
+          successMsg(`상품아이디 ${pid}가 삭제처리되었습니다.`);
+          clearForm();
+          listAll();
+        }else{
+          throw new Error(`${res.header.rtmsg}`);
+        }
+       })
+      .catch(err=>{
+        fail(`${res.message}`);
+      });
     }
 
     //--to do list
