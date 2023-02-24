@@ -13,6 +13,11 @@
       font-weight:bold;
       font-size:0.8em;
     }
+    .fieldSuccess {
+      color:green;
+      font-weight:bold;
+      font-size:0.8em;
+    }
     #productList .wrap .head,
     #productList .wrap .body{
       display:grid;
@@ -31,7 +36,7 @@
     }
 
     /* 버튼 */
-    .none {
+    .hidden {
       display:none;
     }
   </style>
@@ -43,6 +48,7 @@
   <div>
     <form action="">
       <div><span class="fieldError" id="globalErr"></span></div>
+      <div><span class="fieldSuccess" id="globalSuccess"></span></div>
       <div>
         <label for="productId">상품아이디</label>
         <input type="text" id="productId" size="10">
@@ -69,7 +75,7 @@
         <button type='button' id="addBtn">등록</button>
       </div>
       <!--조회상태-->
-      <div class="btngrp read">
+      <div class="btngrp read hidden">
         <button type='button' id="toAddBtn">신규</button>
         <button type='button' id="modifyBtn">수정</button>
         <button type='button' id="delBtn">삭제</button>
@@ -93,21 +99,56 @@
   </div>
   <script>
 
-    const $findBtn = document.getElementById('findBtn');
-    $findBtn.addEventListener('click', ({target})=>{
-      const $input = target.previousElementSibling;
-      findById($input.value);
-    });
+    //
+    const $productId = document.getElementById('productId');
 
+    //상품조회 리스너 등록
+    const $findBtn = document.getElementById('findBtn');
+    $findBtn.addEventListener('click', e=>findById($productId.value));
+
+    //상품삭제 리스너 등록
+    const $delBtn = document.getElementById('delBtn');
+    $delBtn.addEventListener('click', e=>delItem($productId.value));
+
+    //전체목록 리스너 등록
     const $listBtn = document.getElementById('listBtn');
     $listBtn.addEventListener('click', listAll);
 
+    // element 숨김
+    function doHidden(ele){
+      if(!ele.classList.contains('hidden')){
+       ele.classList.add('hidden');
+      }
+    }
+
+    // element 표시
+    function doDisplay(ele){
+      if(ele.classList.contains('hidden')){
+        ele.classList.remove('hidden');
+      }
+    }
+
+    // 오류메세지 출력
+    function failMsg(msg){
+      document.getElementById('globalErr').textContent = msg;
+      document.getElementById('globalSuccess').textContent = '';
+    }
+
+    // 성공메세지 출력
+    function successMsg(msg){
+      document.getElementById('globalSuccess').textContent = msg;
+      document.getElementById('globalErr').textContent = '';
+    }
 
     //상품조회
     function findById(pid){
       const url = `http://localhost:9080/api/products/${pid}`;
       //상품1건 표시하기
       const displayItem = ({pname,quantity,price}) => {
+
+         doDisplay(document.querySelector('.btngrp.read'));
+         doHidden(document.querySelector('.btngrp.add'));
+
          document.getElementById('pname').value = pname;
          document.getElementById('quantity').value = quantity;
          document.getElementById('price').value = price;
@@ -117,8 +158,30 @@
         'Accept' : 'application/json'   // client에서 서버로부터 응답메시지를 받고자하는 유형
       })
         .then(res=>res.json())
-        .then(res=>res.header.rtcd == '00' ? displayItem(res.data) : new Error(`${res.header.rtmsg}`))
-        .catch(error=>console.error(error.message));
+        .then(res=>{
+          if(res.header.rtcd === '00'){
+            successMsg('');
+            displayItem(res.data);
+          }else {
+            throw new Error(`${res.header.rtmsg}`)
+          }})
+        .catch(err=>{
+          failMsg(err.message);
+        });
+    }
+
+    //상품삭제
+    function delItem(pid){
+      const url = `http://localhost:9080/api/products/${pid}`;
+      fetch(url,{
+        method: 'DELETE',
+        Accept: 'application/json'
+      })
+      .then(res=>res.json())
+      .then(res=>res.header.rtcd == '00' ?
+        document.getElementById('globalSucess').textContent = `상품아이디 ${pid}가 삭제처리되었습니다.`
+        : new Error(`${res.header.rtmsg}`))
+      .catch(err=>console.error(err.message));
     }
 
     //--to do list
