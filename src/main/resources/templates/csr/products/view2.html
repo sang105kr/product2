@@ -92,15 +92,60 @@
     </div>
   </div>
   <script>
+
+    const $findBtn = document.getElementById('findBtn');
+    $findBtn.addEventListener('click', ({target})=>{
+      const $input = target.previousElementSibling;
+      findById($input.value);
+    });
+
+    const $listBtn = document.getElementById('listBtn');
+    $listBtn.addEventListener('click', listAll);
+
+
+    //상품조회
+    function findById(pid){
+      const url = `http://localhost:9080/api/products/${pid}`;
+      //상품1건 표시하기
+      const displayItem = ({pname,quantity,price}) => {
+         document.getElementById('pname').value = pname;
+         document.getElementById('quantity').value = quantity;
+         document.getElementById('price').value = price;
+      }
+      fetch(url,{
+        method : 'GET',
+        'Accept' : 'application/json'   // client에서 서버로부터 응답메시지를 받고자하는 유형
+      })
+        .then(res=>res.json())
+        .then(res=>res.header.rtcd == '00' ? displayItem(res.data) : new Error(`${res.header.rtmsg}`))
+        .catch(error=>console.error(error.message));
+    }
+
     //--to do list
+    function makeItemRow({pname,price,productId,quantity}){
+      const html = `<div>${productId}</div><div>${pname}</div><div>${quantity}</div><div>${price}</div>`;
+      return html;
+    }
+
+    //목록 렌더링
+    function addItem(items){
+      console.log('addItem()호출됨');
+      console.log(items);
+      const rows = items.map(item=>makeItemRow(item)).join('');
+      document.querySelector('.body').innerHTML = rows;
+    }
 
     //상품목록
-    const url = `http://localhost:9080/api/products`;
-    fetch(url,{
-      method : 'GET'
-    })
-    .then(res=>res.json())
-    .then(res=>{console.log(res)});
+    function listAll(){
+      const url = `http://localhost:9080/api/products`;
+      fetch(url,{
+        method : 'GET'
+      })
+      .then(res=>res.json())
+      .then(res=>res.header.rtcd == '00' ? addItem(res.data) : new Error(`${res.header.rtmsg}`))
+      .catch(err=>console.error(err.message));
+    }
+    listAll();
   </script>
 </body>
 </html>
