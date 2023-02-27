@@ -144,6 +144,13 @@
         $msg.err.textContent = '';
       };
 
+      //상품등록양식 클리어
+      const clearForm = () => {
+        $productFields.pname.value = '';
+        $productFields.quantity.value = '';
+        $productFields.price.value = '';
+      };
+
       // 목록
       const makeRow = p =>
         `<div>${p.productId}</div><div>${p.pname}</div><div>${p.quantity}</div><div>${p.price}</div>`;
@@ -213,6 +220,7 @@
           $productFields.price.value = res.data.price;
         } else if (res.header.rtcd == '01') {
           errMsg(`찾고자하는 상품이 없습니다`);
+          clearform();
         } else {
           throw new Error(`${res.header.rtmsg}`);
         }
@@ -237,12 +245,30 @@
             $msg.err = '상품아이디를 입력하세요';
             return;
           }
+          //읽기모드 버튼 보이기
+          const readMode = document.querySelector('.btngrp.read');
+          readMode.classList.contains('hidden') &&
+            readMode.classList.remove('hidden');
+
+          //등록버튼 숨기기
+          const addMode = document.querySelector('.btngrp.add');
+          addMode.classList.contains('hidden') ||
+            addMode.classList.add('hidden');
+
           find_h(e, pid);
         },
         false,
       );
 
       // 수정
+      const modify = res => {
+        if (res.header.rtcd == '01') {
+          successMsg(`상품번호: ${res.data.productId} 가 수정되었습니다.`);
+          list_h();
+        } else {
+          throw new Error(`${res.header.rtmsg}`);
+        }
+      };
       const modify_h = (e, pid) => {
         const url = `http://localhost:9080/api/products/${pid}`;
         const payload = {
@@ -257,12 +283,15 @@
             'Content-type': 'application/json',
           },
           body: JSON.stringify(payload),
-        });
+        })
+          .then(res => res.json())
+          .then(res => modify(res))
+          .catch(err => errMsg(err.message));
       };
       $allBtn.modify.addEventListener(
         'click',
         e => {
-          const pid = trim($productFields.productId.value);
+          const pid = $productFields.productId.value.trim();
           modify_h(e, pid);
         },
         false,
@@ -281,6 +310,26 @@
         e => {
           const pid = trim($productFields.productId.value);
           del_h(e.pid);
+        },
+        false,
+      );
+
+      // 신규
+      $allBtn.toAdd.addEventListener(
+        'click',
+        e => {
+          //읽기모드 버튼 숨기기
+          const readMode = document.querySelector('.btngrp.read');
+          readMode.classList.contains('hidden') ||
+            readMode.classList.add('hidden');
+
+          //등록버튼 보이기
+          const addMode = document.querySelector('.btngrp.add');
+          addMode.classList.contains('hidden') &&
+            addMode.classList.remove('hidden');
+
+          //상품 등록 양식 클리어
+          document.querySelector('form').reset();
         },
         false,
       );
