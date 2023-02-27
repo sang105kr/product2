@@ -132,17 +132,53 @@
         err: document.getElementById('globalErr'),
       };
 
+      // 글로벌 성공메세지
+      const errMsg = msg => {
+        $msg.success.textContent = '';
+        $msg.err.textContent = msg;
+      };
+
+      // 글로벌 에러메시지
+      const successMsg = msg => {
+        $msg.success.textContent = msg;
+        $msg.err.textContent = '';
+      };
+
       // 목록
+      const makeRow = p =>
+        `<div>${p.productId}</div><div>${p.pname}</div><div>${p.quantity}</div><div>${p.price}</div>`;
+
+      const list = res => {
+        if (res.header.rtcd == '00') {
+          const html = res.data.map(p => makeRow(p)).join('');
+          document.querySelector('.wrap .body').innerHTML = html;
+        } else {
+          throw new Error(`${res.header.rtmsg}`);
+        }
+      };
 
       const list_h = e => {
+        console.log('list_h');
         const url = `http://localhost:9080/api/products`;
         fetch(url, {
           method: 'GET',
-        }).then(res => console.log(res.json()));
+        })
+          .then(res => res.json())
+          .then(list) //.then(res => list(res))
+          .catch(err => errMsg(err.message));
       };
       $allBtn.list.addEventListener('click', list_h, false);
 
       // 등록
+      const add = res => {
+        if (res.header.rtcd == '00') {
+          successMsg(`상품번호: ${res.data} 가 등록되었습니다.`);
+          document.querySelector('form').reset();
+          list_h();
+        } else {
+          throw new Error(`${res.header.rtmsg}`);
+        }
+      };
       const add_h = e => {
         const url = `http://localhost:9080/api/products`;
         const payload = {
@@ -150,6 +186,9 @@
           quantity: $productFields.quantity.value,
           price: $productFields.price.value,
         };
+
+        //유효성체크
+
         fetch(url, {
           method: 'POST',
           headers: {
@@ -157,11 +196,27 @@
             'Content-type': 'application/json',
           },
           body: JSON.stringify(payload),
-        });
+        })
+          .then(res => res.json())
+          .then(add) //.then(res => add(res))
+          .catch(err => errMsg(err.message));
       };
       $allBtn.add.addEventListener('click', add_h, false);
 
       // 조회
+      const find = res => {
+        if (res.header.rtcd == '00') {
+          successMsg(`상품번호: ${res.data.productId} 가 조회되었습니다.`);
+          $productFields.productId.value = res.data.productId;
+          $productFields.pname.value = res.data.pname;
+          $productFields.quantity.value = res.data.quantity;
+          $productFields.price.value = res.data.price;
+        } else if (res.header.rtcd == '01') {
+          errMsg(`찾고자하는 상품이 없습니다`);
+        } else {
+          throw new Error(`${res.header.rtmsg}`);
+        }
+      };
       const find_h = (e, pid) => {
         const url = `http://localhost:9080/api/products/${pid}`;
         fetch(url, {
@@ -169,12 +224,15 @@
           headders: {
             Accept: 'application/json',
           },
-        });
+        })
+          .then(res => res.json())
+          .then(find) //.then(res => find(res))
+          .catch(err => errMsg(err.message));
       };
       $allBtn.find.addEventListener(
         'click',
         e => {
-          const pid = trim($productFields.productId.value);
+          const pid = $productFields.productId.value.trim();
           if (!pid) {
             $msg.err = '상품아이디를 입력하세요';
             return;
@@ -226,6 +284,9 @@
         },
         false,
       );
+
+      //목록 가져오기
+      list_h();
     </script>
   </body>
 </html>
