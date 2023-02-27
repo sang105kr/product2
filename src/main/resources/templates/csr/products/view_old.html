@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>상품관리-CSR</title>
+  <style>
+    /* { outline:1px solid red }*/
+    .fieldError {
+      color:red;
+      font-weight:bold;
+      font-size:0.8em;
+    }
+    .fieldSuccess {
+      color:green;
+      font-weight:bold;
+      font-size:0.8em;
+    }
+    #productList .wrap .head,
+    #productList .wrap .body{
+      display:grid;
+      grid-template-columns: 50px 100px 50px 100px;
+      grid-auto-rows: 2em;
+    }
+
+    #productList .wrap .head{
+      font-weight:bold;
+      font-size:1.2em;
+    }
+
+    #productList .wrap .head div,
+    #productList .wrap .body div {
+     border:1px solid gray;
+    }
+
+    /* 버튼 */
+    .hidden {
+      display:none;
+    }
+  </style>
+</head>
+<body>
+  <h3>상품관리-CSR</h3>
+  <hr>
+  <!--상품등록-->
+  <div>
+    <form action="">
+      <div><span class="fieldError" id="globalErr"></span></div>
+      <div><span class="fieldSuccess" id="globalSuccess"></span></div>
+      <div>
+        <label for="productId">상품아이디</label>
+        <input type="text" id="productId" size="10">
+        <button type="button" id="findBtn">조회</button>
+        <span class="fieldError" id="productIdErr"></span>
+      </div>
+      <div>
+        <label for="pname">상품명</label>
+        <input type="text" id="pname">
+        <span class="fieldError" id="pnameErr"></span>
+      </div>
+      <div>
+        <label for="quantity">수량</label>
+        <input type="text" id="quantity">
+        <span class="fieldError" id="quantityErr"></span>
+      </div>
+      <div>
+        <label for="price">단가</label>
+        <input type="text" id="price">
+        <span class="fieldError" id="priceErr"></span>
+      </div>
+      <!--등록상태-->
+      <div class="btngrp add">
+        <button type='button' id="addBtn">등록</button>
+      </div>
+      <!--조회상태-->
+      <div class="btngrp read hidden">
+        <button type='button' id="toAddBtn">신규</button>
+        <button type='button' id="modifyBtn">수정</button>
+        <button type='button' id="delBtn">삭제</button>
+      </div>
+    </form>
+  </div>
+  <!--상품목록-->
+  <div id="productList">
+    <h3>상품목록</h3>
+    <div><button id="listBtn">목록</button></div>
+    <div class="wrap">
+      <div class="head">
+        <div>ID</div><div>상품명</div><div>수량</div><div>가격</div>
+      </div>
+      <div class="body">
+        <div>1</div><div>상품명1</div><div>10</div><div>1000</div>
+        <div>2</div><div>상품명2</div><div>20</div><div>2000</div>
+        <div>3</div><div>상품명3</div><div>30</div><div>3000</div>
+      </div>
+    </div>
+  </div>
+  <script>
+
+    //
+    const $productId = document.getElementById('productId');
+
+    //상품등록 리스너 등록
+    const $addBtn = document.getElementById('addBtn');
+    $addBtn.addEventListener('click',e=>{
+      const pname = document.getElementById('pname').value;
+      const quantity = document.getElementById('quantity').value;
+      const price = document.getElementById('price').value;
+
+      //유효성체크
+
+
+      const product = {pname,quantity,price};
+      addProduct(product);
+    });
+
+    //상품신규 리스너 등록
+    const $toAddBtn = document.getElementById('toAddBtn');
+    $toAddBtn.addEventListener('click',e=>{
+       document.querySelector('form').reset();
+       doDisplay(document.querySelector('.btngrp.add'));
+       doHidden(document.querySelector('.btngrp.read'));
+    });
+
+    //상품조회 리스너 등록
+    const $findBtn = document.getElementById('findBtn');
+    $findBtn.addEventListener('click', e=>findById($productId.value));
+
+    //상품수정 리스너 등록
+    const $modifyBtn = document.getElementById('modifyBtn');
+    $modifyBtn.addEventListener('click', e=>{
+      const pname = document.getElementById('pname').value;
+      const quantity = document.getElementById('quantity').value;
+      const price = document.getElementById('price').value;
+
+      //유효성체크
+
+
+      const product = {pname,quantity,price};
+      updateItem($productId.value,product);
+    });
+
+
+    //상품삭제 리스너 등록
+    const $delBtn = document.getElementById('delBtn');
+    $delBtn.addEventListener('click', e=>{
+      if(confirm('삭제하시겠습니까?')) {
+        delItem($productId.value);
+      }
+    });
+
+    //전체목록 리스너 등록
+    const $listBtn = document.getElementById('listBtn');
+    $listBtn.addEventListener('click', listAll);
+
+    // element 숨김
+    function doHidden(ele){
+      if(!ele.classList.contains('hidden')){
+       ele.classList.add('hidden');
+      }
+    }
+    // element 표시
+    function doDisplay(ele){
+      if(ele.classList.contains('hidden')){
+        ele.classList.remove('hidden');
+      }
+    }
+
+    // 오류메세지 출력
+    function failMsg(msg){
+      document.getElementById('globalErr').textContent = msg;
+      document.getElementById('globalSuccess').textContent = '';
+    }
+
+    // 성공메세지 출력
+    function successMsg(msg){
+      document.getElementById('globalSuccess').textContent = msg;
+      document.getElementById('globalErr').textContent = '';
+    }
+
+    // 상품등록 양식 클리어
+    function clearForm(){
+      document.getElementById('pname').value = '';
+      document.getElementById('quantity').value = '';
+      document.getElementById('price').value = '';
+    }
+
+    //상품등록
+    function addProduct(product){  // { pname:'', quantyty:'',price:''}
+      const url = `http://localhost:9080/api/products`;
+      fetch(url,{
+        method: 'POST',
+        headers: {
+          'Accept' :        'application/json',   // client에서 응답받고자하는 문서유형을 서버에 요청
+          'Content-type' :  'application/json'    // client에서 요청메세지바디의 문서유형
+        },
+        body: JSON.stringify(product)   // `{ "pname":"", "quantyty":"",price:""}`
+      })
+      .then(res=>res.json())
+      .then(res=>{
+        if(res.header.rtcd == '00'){
+          clearForm();
+          listAll();
+          successMsg(`상품아이디 : ${res.data} 로  등록하였습니다. `);
+        }else{
+          throw new Error(`${res.header.rtmsg}`);
+        }
+      })
+      .catch(err=>{
+        fail(`${err.message}`);
+      });
+    }
+
+    //상품조회
+    function findById(pid){
+      const url = `http://localhost:9080/api/products/${pid}`;
+      //상품1건 표시하기
+      const displayItem = ({pname,quantity,price}) => {
+
+         doDisplay(document.querySelector('.btngrp.read'));
+         doHidden(document.querySelector('.btngrp.add'));
+
+         document.getElementById('pname').value = pname;
+         document.getElementById('quantity').value = quantity;
+         document.getElementById('price').value = price;
+      }
+      fetch(url,{
+        method : 'GET'
+      })
+        .then(res=>res.json())
+        .then(res=>{
+          if(res.header.rtcd === '00'){
+            successMsg('');
+            displayItem(res.data);
+          }else {
+            throw new Error(`${res.header.rtmsg}`)
+          }})
+        .catch(err=>{
+          failMsg(err.message);
+          clearForm();
+        });
+    }
+
+    //상품수정
+    function updateItem(pid, product){
+      const url = `http://localhost:9080/api/products/${pid}`;
+      fetch(url,{
+        method : 'PATCH',
+        headers: {
+          'Accept' :        'application/json',   // client에서 응답받고자하는 문서유형을 서버에 요청
+          'Content-type' :  'application/json'    // client에서 요청메세지바디의 문서유형
+        },
+        body: JSON.stringify(product)   // `{ "pname":"", "quantyty":"",price:""}`
+      })
+      .then(res=>res.json())
+      .then(res=>{
+          if(res.header.rtcd == '01'){
+            successMsg(`상품아이디 ${pid}에 대해 수정하였습니다.`);
+            listAll();
+          }else{
+            throw new Error(`${res.header.rtcd}-${res.header.rtmsg}`);
+          }
+       })
+      .catch(err=>{
+         failMsg(`상품수정오류발생: ${err.message}`)
+      });
+
+    }
+
+    //상품삭제
+    function delItem(pid){
+      const url = `http://localhost:9080/api/products/${pid}`;
+      fetch(url,{
+        method: 'DELETE'
+      })
+      .then(res=>res.json())
+      .then(res=>{
+        if(res.header.rtcd == '00') {
+          successMsg(`상품아이디 ${pid}가 삭제처리되었습니다.`);
+          clearForm();
+          listAll();
+        }else{
+          throw new Error(`${res.header.rtmsg}`);
+        }
+       })
+      .catch(err=>{
+        fail(`${res.message}`);
+      });
+    }
+
+    //--to do list
+    function makeItemRow({pname,price,productId,quantity}){
+      const html = `<div>${productId}</div><div>${pname}</div><div>${quantity}</div><div>${price}</div>`;
+      return html;
+    }
+
+    //목록 렌더링
+    function addItem(items){
+      console.log('addItem()호출됨');
+      console.log(items);
+      const rows = items.map(item=>makeItemRow(item)).join('');
+      document.querySelector('.body').innerHTML = rows;
+    }
+
+    //상품목록
+    function listAll(){
+      const url = `http://localhost:9080/api/products`;
+      fetch(url,{
+        method : 'GET'
+      })
+      .then(res=>res.json())
+      .then(res=>res.header.rtcd == '00' ? addItem(res.data) : new Error(`${res.header.rtmsg}`))
+      .catch(err=>console.error(err.message));
+    }
+    listAll();
+  </script>
+</body>
+</html>
