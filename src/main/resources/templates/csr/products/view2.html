@@ -38,6 +38,18 @@
       .hidden {
         display: none;
       }
+
+      /* 삭제 팝업 */
+      #delPopup {
+        border: 1px solid gray;
+        border-radius: 5px;
+        background-color: gray;
+        color: white;
+        box-shadow: 3px 3px 3px 3px rgba(0, 0, 0, 0.2);
+      }
+      #delPopup::backdrop {
+        background-color: rgba(0, 0, 0, 0.2);
+      }
     </style>
   </head>
   <body>
@@ -108,8 +120,15 @@
         </div>
       </div>
     </div>
-    <p>hello</p>
-    <p>word</p>
+
+    <!--삭제 dialog-->
+    <dialog id="delPopup">
+      <p>삭제하시겠습니까?</p>
+      <form method="dialog">
+        <button value="del">삭제</button>
+        <button value="cancel">취소</button>
+      </form>
+    </dialog>
     <script>
       const $productFields = {
         productId: document.getElementById('productId'),
@@ -220,7 +239,7 @@
           $productFields.price.value = res.data.price;
         } else if (res.header.rtcd == '01') {
           errMsg(`찾고자하는 상품이 없습니다`);
-          clearform();
+          clearForm();
         } else {
           throw new Error(`${res.header.rtmsg}`);
         }
@@ -298,18 +317,48 @@
       );
 
       // 삭제
+      const del = res => {
+        if (res.header.rtcd == '00') {
+          successMsg(`상품이 삭제되었습니다.`);
+          document.querySelector('form').reset();
+          list_h();
+        } else {
+          throw new Error(`${res.header.rtmsg}`);
+        }
+      };
       const del_h = (e, pid) => {
         const url = `http://localhost:9080/api/products/${pid}`;
         fetch(url, {
           method: 'DELETE',
           headers: { Accept: 'application/json' },
-        });
+        })
+          .then(res => res.json())
+          .then(res => del(res))
+          .catch(err => errMsg(err.message));
       };
       $allBtn.del.addEventListener(
         'click',
         e => {
-          const pid = trim($productFields.productId.value);
-          del_h(e.pid);
+          const pid = $productFields.productId.value.trim();
+          if (pid) {
+            // 삭제팝업 띄우기
+            const $delPopup = document.getElementById('delPopup');
+            $delPopup.showModal();
+            // 삭제팝업 닫칠때 버튼값 읽어와서 del이면 삭제 진행
+            $delPopup.addEventListener(
+              'close',
+              e => {
+                if ($delPopup.returnValue != 'del') return;
+                del_h(e, pid);
+              },
+              false,
+            );
+
+            return;
+          } else {
+            errMsg('삭제할 상품번호를 입력하세요');
+            $productFields.productId.focus();
+          }
         },
         false,
       );
